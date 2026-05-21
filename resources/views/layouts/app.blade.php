@@ -21,9 +21,9 @@
             </div>
             
             <nav class="mt-4">
-                <a href="{{ route('dashboard') }}" class="block py-3 px-6 hover:bg-gf-green bg-gf-green border-l-4 border-green-400 font-semibold transition">Dashboard</a>
-                <a href="#" class="block py-3 px-6 hover:bg-gf-green border-l-4 border-transparent text-gray-300 transition">Incident Logs</a>
-                <a href="#" class="block py-3 px-6 hover:bg-gf-green border-l-4 border-transparent text-gray-300 transition">Audit Trails</a>
+               <a href="{{ route('dashboard') }}" class="...">Dashboard</a>
+               <a href="{{ route('incidents.index') }}" class="...">Incident Logs</a>
+               <a href="{{ route('audits.index') }}" class="...">Audit Trails</a>
             </nav>
         </div>
 
