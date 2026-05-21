@@ -36,6 +36,6 @@ class DashboardController extends Controller
             ->where('is_deleted', false)
             ->count();
 
-        return view('dashboard', compact('criticalIncidents', 'recentLogs', 'totalIncidents', 'criticalOpenCount'));
+        return view('dashboard.dashboard', compact('criticalIncidents', 'recentLogs', 'totalIncidents', 'criticalOpenCount'));
     }
 }
