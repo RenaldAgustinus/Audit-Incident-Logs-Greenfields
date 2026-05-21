@@ -28,14 +28,23 @@ class DashboardController extends Controller
             ->orderBy('incident_logs.created_at', 'desc')
             ->paginate(10); // Otomatis aman dan ringan
 
-        // 3. Hitung Widget Statistik
-        $totalIncidents = DB::table('incident_logs')->where('is_deleted', false)->count();
-        $criticalOpenCount = DB::table('incident_logs')
-            ->where('severity_level', 'critical')
-            ->where('status', 'open')
-            ->where('is_deleted', false)
-            ->count();
+            // 3. Hitung Widget Statistik
+            $totalIncidents = DB::table('incident_logs')->where('is_deleted', false)->count();
+            
+            // PERBAIKAN 1: Tambahkan 'investigating' agar angkanya sama persis dengan jumlah card merah di bawah
+            $criticalOpenCount = DB::table('incident_logs')
+                ->where('severity_level', 'critical')
+                ->whereIn('status', ['open', 'investigating']) 
+                ->where('is_deleted', false)
+                ->count();
+                
+            // PERBAIKAN 2: Buat query untuk Pending Audit (Misal: Semua insiden yang statusnya masih 'open')
+            $pendingAuditCount = DB::table('incident_logs')
+                ->where('status', 'open')
+                ->where('is_deleted', false)
+                ->count();
 
-        return view('dashboard.dashboard', compact('criticalIncidents', 'recentLogs', 'totalIncidents', 'criticalOpenCount'));
+            // Jangan lupa tambahkan $pendingAuditCount ke compact()
+            return view('dashboard.dashboard', compact('criticalIncidents', 'recentLogs', 'totalIncidents', 'criticalOpenCount', 'pendingAuditCount'));
     }
 }

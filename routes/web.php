@@ -13,11 +13,16 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Rute Terlindungi (Hanya yang sudah login)
 Route::middleware(['user.session'])->group(function () {
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 // Route untuk Incident Logs
-    Route::get('/incidents', [IncidentController::class, 'index'])->name('incidents.index');
-    Route::post('/incidents', [IncidentController::class, 'store'])->name('incidents.store');
+Route::get('/incidents', [IncidentController::class, 'index'])->name('incidents.index');
+Route::post('/incidents', [IncidentController::class, 'store'])->name('incidents.store');
     
-    // Route untuk Audit Trails
-    Route::get('/audits', [AuditController::class, 'index'])->name('audits.index');
+// Route untuk Audit Trails
+Route::get('/audits', [AuditController::class, 'index'])->name('audits.index');
+    
+    Route::get('/profile', function () {
+        return view('profile.profile'); 
+    })->name('profile');
+    
 });

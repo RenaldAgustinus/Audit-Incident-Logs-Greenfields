@@ -1,8 +1,9 @@
 @extends('layouts.app')
 
-@section('page_title', 'Overview Dashboard')
+@section('page_title', 'Attention Logic Dashboard')
 
 @section('content')
+
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
         <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Total Insiden</h3>
@@ -12,22 +13,30 @@
         <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Critical Open</h3>
         <p class="text-3xl font-bold text-red-600">{{ $criticalOpenCount }}</p>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 md:col-span-2">
-        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">System Status</h3>
-        <p class="text-3xl font-bold text-green-600">Normal</p>
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Pending Audit</h3>
+        <p class="text-3xl font-bold text-blue-600">{{ $pendingAuditCount }}</p> 
     </div>
-</div>
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">System Status</h3>
+        
+        @if($criticalOpenCount > 0)
+            <p class="text-3xl font-bold text-red-600 animate-pulse">Critical</p>
+        @else
+            <p class="text-3xl font-bold text-green-600">Normal</p>
+        @endif
+    </div>
+</div> @if($criticalIncidents->count() > 0)
 
-@if($criticalIncidents->count() > 0)
 <div class="mb-8">
     <h2 class="text-lg font-bold text-red-700 flex items-center mb-4">
         <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
         URGENT ACTION REQUIRED
     </h2>
     
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="flex overflow-x-auto space-x-6 pb-4 snap-x">
         @foreach($criticalIncidents as $incident)
-        <div class="bg-white border-l-4 border-red-600 rounded-lg shadow-sm p-6 relative">
+        <div class="bg-white border-l-4 border-red-600 rounded-lg shadow-sm p-6 relative min-w-[320px] md:min-w-[450px] shrink-0 snap-start">
             <div class="absolute top-6 right-6">
                 <span class="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded">CRITICAL</span>
             </div>
@@ -36,12 +45,13 @@
                     <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
                 <div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $incident->incident_title }}</h3>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2 pr-20">{{ $incident->incident_title }}</h3>
                     <p class="text-gray-600 text-sm mb-4">{{ Str::limit($incident->description, 90) }}</p>
                     <p class="text-xs text-gray-400 mb-4">Dilaporkan: {{ \Carbon\Carbon::parse($incident->created_at)->format('d M Y, H:i') }} WIB</p>
-                    <button class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition">
+                    
+                    <a href="{{ route('incidents.index') }}" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition">
                         Tindak Lanjuti &rarr;
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -50,7 +60,7 @@
 </div>
 @endif
 
-<div>
+<div id="recent-logs" class="scroll-mt-6">
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-bold text-gf-green flex items-center">
             <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
@@ -87,17 +97,17 @@
                         @endif
                     </td>
                     <td class="py-4 px-6 text-center">
-                        <button class="text-gray-400 hover:text-gray-600">
+                        <a href="{{ route('incidents.index') }}" title="Lihat Detail" class="inline-block text-gray-400 hover:text-gf-green transition">
                             <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
-                        </button>
+                        </a>
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
         
-        <div class="p-4 bg-gray-50 border-t border-gray-100">
-            {{ $recentLogs->links('pagination::tailwind') }}
+       <div class="p-4 bg-gray-50 border-t border-gray-100">
+            {{ $recentLogs->fragment('recent-logs')->links('pagination::tailwind') }}
         </div>
     </div>
 </div>
