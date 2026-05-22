@@ -14,7 +14,6 @@ class DatabaseSeeder extends Seeder
         $faker = Faker::create('id_ID');
         $now = Carbon::now();
 
-        // 1. Insert Users (Hardcoded agar gampang buat login)
        DB::table('users')->insert([
             [
                 'username' => 'supervisor_admin',
