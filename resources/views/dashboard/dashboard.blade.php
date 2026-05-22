@@ -26,8 +26,9 @@
             <p class="text-3xl font-bold text-green-600">Normal</p>
         @endif
     </div>
-</div> @if($criticalIncidents->count() > 0)
+</div> 
 
+@if($criticalIncidents->count() > 0)
 <div class="mb-8">
     <h2 class="text-lg font-bold text-red-700 flex items-center mb-4">
         <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -66,6 +67,11 @@
             <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
             RECENT LOGS
         </h2>
+        
+        <form action="{{ route('dashboard') }}" method="GET" class="relative">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari judul insiden..." class="pl-8 pr-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-[#1B4D3E] focus:border-[#1B4D3E] w-48 md:w-64" onchange="this.form.submit()">
+            <svg class="w-4 h-4 absolute left-2.5 top-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </form>
     </div>
     
     <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
@@ -97,7 +103,7 @@
                         @endif
                     </td>
                     <td class="py-4 px-6 text-center">
-                        <a href="{{ route('incidents.index') }}" title="Lihat Detail" class="inline-block text-gray-400 hover:text-gf-green transition">
+                        <a href="{{ route('incidents.index', ['id' => $log->id]) }}" title="Lihat Detail" class="inline-block text-gray-400 hover:text-gf-green transition">
                             <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
                         </a>
                     </td>

@@ -34,8 +34,41 @@
     </form>
 </div>
 
+<div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mt-6 mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <form action="{{ route('incidents.index') }}" method="GET" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <div class="relative">
+            <svg class="w-4 h-4 absolute left-3 top-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari insiden/pelapor..." class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-[#1B4D3E] focus:border-[#1B4D3E] w-full md:w-64">
+        </div>
+        <select name="severity" class="border border-gray-300 rounded-lg text-sm py-2 px-3 focus:ring-[#1B4D3E] focus:border-[#1B4D3E]">
+            <option value="">Semua Severity</option>
+            <option value="critical" {{ request('severity') == 'critical' ? 'selected' : '' }}>Critical</option>
+            <option value="medium" {{ request('severity') == 'medium' ? 'selected' : '' }}>Medium</option>
+            <option value="low" {{ request('severity') == 'low' ? 'selected' : '' }}>Low</option>
+        </select>
+        <select name="status" class="border border-gray-300 rounded-lg text-sm py-2 px-3 focus:ring-[#1B4D3E] focus:border-[#1B4D3E]">
+            <option value="">Semua Status</option>
+            <option value="open" {{ request('status') == 'open' ? 'selected' : '' }}>Tertunda</option>
+            <option value="investigating" {{ request('status') == 'investigating' ? 'selected' : '' }}>Diproses</option>
+            <option value="resolved" {{ request('status') == 'resolved' ? 'selected' : '' }}>Selesai</option>
+        </select>
+        <div class="flex items-center space-x-2">
+            <input type="date" name="start_date" value="{{ request('start_date') }}" class="border border-gray-300 rounded-lg text-sm py-2 px-3 focus:ring-[#1B4D3E] focus:border-[#1B4D3E]" title="Dari Tanggal">
+            <span class="text-gray-400 font-bold">-</span>
+            <input type="date" name="end_date" value="{{ request('end_date') }}" class="border border-gray-300 rounded-lg text-sm py-2 px-3 focus:ring-[#1B4D3E] focus:border-[#1B4D3E]" title="Sampai Tanggal">
+        </div>
+        <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Filter</button>
+        @if(request()->anyFilled(['search', 'severity', 'status', 'start_date','end_date']))
+            <a href="{{ route('incidents.index') }}" class="text-gray-500 hover:text-red-600 text-sm font-medium transition">Reset</a>
+        @endif
+    </form>
+    <a href="{{ route('incidents.export') }}" class="flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm whitespace-nowrap shrink-0">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        Export CSV
+    </a>
+</div>
+
 <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mt-6">
-    
     <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
         <h3 class="font-bold text-gray-700 flex items-center">
             Daftar Log Insiden

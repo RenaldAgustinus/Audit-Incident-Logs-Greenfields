@@ -10,19 +10,43 @@ class IncidentController extends Controller
 {
     public function index(\Illuminate\Http\Request $request)
     {
-        // 1. Siapkan query dasar
         $query = DB::table('incident_logs')
             ->join('users', 'incident_logs.reported_by', '=', 'users.id')
             ->select('incident_logs.*', 'users.full_name as reporter_name')
             ->where('incident_logs.is_deleted', false);
 
-        // 2. CEK FILTER: Jika ada kiriman 'id' dari Dashboard, filter tabelnya!
-        if ($request->has('id')) {
+        // Filter ID Spesifik (dari Dashboard)
+        if ($request->has('id') && $request->id != '') {
             $query->where('incident_logs.id', $request->id);
         }
 
-        // 3. Eksekusi query dengan pagination
-        $logs = $query->orderBy('incident_logs.created_at', 'desc')->paginate(15);
+        // Fitur Pencarian (Kata Kunci Judul / Pelapor)
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('incident_logs.incident_title', 'like', '%' . $request->search . '%')
+                  ->orWhere('users.full_name', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // Fitur Filter Status, Severity, Tanggal
+        if ($request->filled('status')) {
+            $query->where('incident_logs.status', $request->status);
+        }
+        if ($request->filled('severity')) {
+            $query->where('incident_logs.severity_level', $request->severity);
+        }
+        // Fitur Filter Rentang Tanggal (Start Date & End Date)
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereDate('incident_logs.created_at', '>=', $request->start_date)
+                  ->whereDate('incident_logs.created_at', '<=', $request->end_date);
+        } elseif ($request->filled('start_date')) {
+            $query->whereDate('incident_logs.created_at', '>=', $request->start_date);
+        } elseif ($request->filled('end_date')) {
+            $query->whereDate('incident_logs.created_at', '<=', $request->end_date);
+        }
+
+        // Ubah jadi 10 data per halaman dan ingat query filternya
+        $logs = $query->orderBy('incident_logs.created_at', 'desc')->paginate(10)->withQueryString();
 
         return view('incident.incident', compact('logs'));
     }
@@ -120,5 +144,45 @@ class IncidentController extends Controller
         ]);
 
         return back()->with('success', 'Log insiden berhasil dihapus dari sistem operasional!');
+    }
+    public function exportCsv(\Illuminate\Http\Request $request)
+    {
+        $logs = DB::table('incident_logs')
+            ->join('users', 'incident_logs.reported_by', '=', 'users.id')
+            ->select('incident_logs.*', 'users.full_name as reporter_name')
+            ->where('incident_logs.is_deleted', false)
+            ->orderBy('incident_logs.created_at', 'desc')
+            ->get();
+
+        $fileName = 'Greenfields_Incident_Logs_' . date('Y-m-d') . '.csv';
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() use($logs) {
+            $file = fopen('php://output', 'w');
+            // Header Kolom Excel
+            fputcsv($file, ['ID Insiden', 'Tanggal', 'Dilaporkan Oleh', 'Judul Insiden', 'Tingkat Keparahan', 'Status', 'Deskripsi Lengkap']);
+
+            foreach ($logs as $log) {
+                fputcsv($file, [
+                    '#GF-'.date('Y', strtotime($log->created_at)).'-'.str_pad($log->id, 3, '0', STR_PAD_LEFT),
+                    $log->created_at,
+                    $log->reporter_name,
+                    $log->incident_title,
+                    strtoupper($log->severity_level),
+                    strtoupper($log->status),
+                    $log->description
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

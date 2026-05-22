@@ -26,6 +26,9 @@ Route::get('/audits', [AuditController::class, 'index'])->name('audits.index');
     
 // Route untuk Soft Delete
 Route::delete('/incidents/{id}', [IncidentController::class, 'destroy'])->name('incidents.destroy');
+
+// Route untuk Export CSV
+Route::get('/incidents/export', [IncidentController::class, 'exportCsv'])->name('incidents.export');
     
     Route::get('/profile', function () {
         return view('profile.profile'); 
