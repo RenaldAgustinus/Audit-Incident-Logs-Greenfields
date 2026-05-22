@@ -20,6 +20,12 @@ Route::post('/incidents', [IncidentController::class, 'store'])->name('incidents
     
 // Route untuk Audit Trails
 Route::get('/audits', [AuditController::class, 'index'])->name('audits.index');
+
+// Route untuk Update Status
+    Route::put('/incidents/{id}/status', [IncidentController::class, 'updateStatus'])->name('incidents.update_status');
+    
+// Route untuk Soft Delete
+Route::delete('/incidents/{id}', [IncidentController::class, 'destroy'])->name('incidents.destroy');
     
     Route::get('/profile', function () {
         return view('profile.profile'); 

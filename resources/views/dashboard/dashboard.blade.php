@@ -49,7 +49,7 @@
                     <p class="text-gray-600 text-sm mb-4">{{ Str::limit($incident->description, 90) }}</p>
                     <p class="text-xs text-gray-400 mb-4">Dilaporkan: {{ \Carbon\Carbon::parse($incident->created_at)->format('d M Y, H:i') }} WIB</p>
                     
-                    <a href="{{ route('incidents.index') }}" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition">
+                   <a href="{{ route('incidents.index', ['id' => $incident->id]) }}" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition mt-2">
                         Tindak Lanjuti &rarr;
                     </a>
                 </div>

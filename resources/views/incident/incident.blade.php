@@ -34,7 +34,26 @@
     </form>
 </div>
 
-<div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+<div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mt-6">
+    
+    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <h3 class="font-bold text-gray-700 flex items-center">
+            Daftar Log Insiden
+            @if(request()->has('id'))
+                <span class="ml-3 bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full border border-blue-200">
+                    Filtered: ID #{{ request()->id }}
+                </span>
+            @endif
+        </h3>
+        
+        @if(request()->has('id'))
+            <a href="{{ route('incidents.index') }}" class="text-sm text-gray-500 hover:text-red-600 transition flex items-center bg-white border border-gray-200 hover:border-red-200 px-3 py-1.5 rounded-md shadow-sm">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                Hapus Filter
+            </a>
+        @endif
+    </div>
+
     <table class="w-full text-left border-collapse">
         <thead>
             <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
@@ -42,7 +61,7 @@
                 <th class="py-3 px-6 border-b">Dilaporkan Oleh</th>
                 <th class="py-3 px-6 border-b">Judul</th>
                 <th class="py-3 px-6 border-b">Severity</th>
-                <th class="py-3 px-6 border-b">Status</th>
+                <th class="py-3 px-6 border-b">Status & Aksi</th>
             </tr>
         </thead>
         <tbody class="text-sm">
@@ -60,7 +79,27 @@
                         <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">LOW</span>
                     @endif
                 </td>
-                <td class="py-4 px-6 uppercase text-xs font-bold">{{ $log->status }}</td>
+                <td class="py-4 px-6">
+                    <div class="flex items-center space-x-3">
+                        <form action="{{ route('incidents.update_status', $log->id) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <select name="status" class="bg-gray-50 border border-gray-300 text-gray-700 text-xs rounded-lg focus:ring-[#1B4D3E] focus:border-[#1B4D3E] block p-2 transition font-bold uppercase" onchange="this.form.submit()">
+                                <option value="open" {{ $log->status == 'open' ? 'selected' : '' }}>TERTUNDA</option>
+                                <option value="investigating" {{ $log->status == 'investigating' ? 'selected' : '' }}>DIPROSES</option>
+                                <option value="resolved" {{ $log->status == 'resolved' ? 'selected' : '' }}>SELESAI</option>
+                            </select>
+                        </form>
+
+                        <form action="{{ route('incidents.destroy', $log->id) }}" method="POST" onsubmit="return confirm('Tindakan ini akan menghapus log insiden dari layar utama. Lanjutkan?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-gray-400 hover:text-red-600 transition bg-white hover:bg-red-50 p-1.5 rounded-md border border-transparent hover:border-red-200" title="Hapus Data">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </form>
+                    </div>
+                </td>
             </tr>
             @endforeach
         </tbody>
