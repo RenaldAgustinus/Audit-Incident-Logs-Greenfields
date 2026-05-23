@@ -26,20 +26,68 @@
 <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
     <!-- Search & Filter Area (Sama seperti sebelumnya) -->
     <form action="{{ route('incidents.index') }}" method="GET" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-        <div class="relative w-full md:w-64">
-            <svg class="w-4 h-4 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari insiden/pelapor..." class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-[#1B4D3E] focus:border-[#1B4D3E] w-full" onchange="this.form.submit()">
-        </div>
-        
-        <!-- Tombol Filter Dropdown (Disederhanakan untuk contoh) -->
-        <button type="submit" class="bg-gray-100 border border-gray-300 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+    <!-- Search Bar -->
+    <div class="relative w-full md:w-64">
+        <svg class="w-4 h-4 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari insiden/pelapor..." class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-[#1B4D3E] focus:border-[#1B4D3E] w-full" onchange="this.form.submit()">
+    </div>
+
+    <!-- Tombol Filter -->
+    <div class="relative">
+        <button type="button" onclick="toggleDropdown('filterDropdown')" class="bg-gray-100 border border-gray-300 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-            Refresh Data
+            Filter Data
+            @if(request()->anyFilled(['severity', 'status', 'start_date', 'end_date']))
+                <span class="bg-[#1B4D3E] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center leading-none">!</span>
+            @endif
         </button>
-        @if(request()->anyFilled(['search']))
-            <a href="{{ route('incidents.index') }}" class="text-xs text-red-600 hover:text-red-800 font-bold transition">Reset Filter</a>
-        @endif
-    </form>
+
+        <!-- Dropdown Panel -->
+        <div id="filterDropdown" class="hidden absolute left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-100 p-5 z-20">
+            <h4 class="text-xs font-bold text-gray-500 uppercase mb-4 tracking-wider">Filter Lanjutan</h4>
+            <div class="space-y-4">
+                <!-- Filter Severity -->
+                <div>
+                    <label class="text-xs text-gray-600 block mb-1 font-bold">Tingkat Keparahan (Severity)</label>
+                    <select name="severity" class="w-full border border-gray-300 rounded-md text-sm py-2 px-3 focus:ring-[#1B4D3E]">
+                        <option value="">Semua Severity</option>
+                        <option value="critical" {{ request('severity') == 'critical' ? 'selected' : '' }}>Critical</option>
+                        <option value="medium"   {{ request('severity') == 'medium'   ? 'selected' : '' }}>Medium</option>
+                        <option value="low"      {{ request('severity') == 'low'      ? 'selected' : '' }}>Low</option>
+                    </select>
+                </div>
+                <!-- Filter Status -->
+                <div>
+                    <label class="text-xs text-gray-600 block mb-1 font-bold">Status Penyelesaian</label>
+                    <select name="status" class="w-full border border-gray-300 rounded-md text-sm py-2 px-3 focus:ring-[#1B4D3E]">
+                        <option value="">Semua Status</option>
+                        <option value="insiden_baru"        {{ request('status') == 'insiden_baru'        ? 'selected' : '' }}>Insiden Baru</option>
+                        <option value="butuh_tindak_lanjut" {{ request('status') == 'butuh_tindak_lanjut' ? 'selected' : '' }}>Butuh Tindak Lanjut</option>
+                        <option value="menunggu_verifikasi" {{ request('status') == 'menunggu_verifikasi' ? 'selected' : '' }}>Menunggu Verifikasi</option>
+                        <option value="selesai"             {{ request('status') == 'selesai'             ? 'selected' : '' }}>Selesai</option>
+                        <option value="ditolak"             {{ request('status') == 'ditolak'             ? 'selected' : '' }}>Ditolak</option>
+                    </select>
+                </div>
+                <!-- Filter Rentang Tanggal -->
+                <div>
+                    <label class="text-xs text-gray-600 block mb-1 font-bold">Rentang Waktu</label>
+                    <div class="flex items-center gap-2">
+                        <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full border border-gray-300 rounded-md text-xs py-2 px-2 focus:ring-[#1B4D3E]">
+                        <span class="text-gray-400 font-bold">-</span>
+                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full border border-gray-300 rounded-md text-xs py-2 px-2 focus:ring-[#1B4D3E]">
+                    </div>
+                </div>
+                <!-- Tombol Aksi -->
+                <div class="pt-4 border-t border-gray-100 flex justify-end gap-3 items-center">
+                    @if(request()->anyFilled(['search', 'severity', 'status', 'start_date', 'end_date']))
+                        <a href="{{ route('incidents.index') }}" class="text-xs text-red-600 hover:text-red-800 font-bold transition">Reset Filter</a>
+                    @endif
+                    <button type="submit" class="bg-[#1B4D3E] hover:bg-[#13382D] text-white text-xs font-bold px-4 py-2 rounded transition">Terapkan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
 
     <div class="flex items-center gap-3 w-full md:w-auto justify-end">
         <a href="{{ route('incidents.export') }}" class="flex items-center bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm whitespace-nowrap">
@@ -106,7 +154,11 @@
                             <!-- LOGIKA TOMBOL BERDASARKAN ROLE & STATUS -->
                             @if(session('role') == 'supervisor')
                                 @if($log->status == 'insiden_baru')
-                                    <button onclick="openSeverityModal({{ $log->id }})" class="bg-[#1B4D3E] text-white text-xs px-3 py-1.5 rounded hover:bg-[#13382D] transition font-bold">Set Severity</button>
+                                    <button onclick="openSeverityModal({{ $log->id }})" 
+                                        title="Set Severity"
+                                        class="w-7 h-7 flex items-center justify-center rounded-full bg-amber-100 hover:bg-amber-200 text-amber-600 font-black text-sm transition border border-amber-300">
+                                        !
+                                    </button>
                                 @elseif($log->status == 'menunggu_verifikasi')
                                     <button onclick="openVerifyModal({{ $log->id }}, '{{ asset('storage/' . $log->resolution_photo) }}', '{{ addslashes($log->resolution_notes) }}')" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded hover:bg-blue-700 transition font-bold">Verifikasi</button>
                                 @endif
@@ -252,6 +304,7 @@
     </div>
 </div>
 
+
 <!-- SCRIPT PENGENDALI MODAL -->
 <script>
     function toggleModal(modalID) {
@@ -277,6 +330,18 @@
         document.getElementById('verifyNotes').innerText = notes;
         toggleModal('verifyModal');
     }
+    function toggleDropdown(id) {
+    document.getElementById(id).classList.toggle('hidden');
+    }
+
+    // Tutup dropdown jika klik di luar
+    window.addEventListener('click', function(e) {
+        if (!e.target.closest('.relative')) {
+            const dd = document.getElementById('filterDropdown');
+            if (dd) dd.classList.add('hidden');
+        }
+    });
+
 </script>
 
 @endsection
