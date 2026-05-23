@@ -53,20 +53,24 @@ class IncidentController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi input
+        // 1. Validasi input (Max Length 100 dan 500 sudah aman di sini)
         $request->validate([
-            'incident_title' => 'required|max:150',
-            'description' => 'required',
-            'severity_level' => 'required|in:low,medium,critical'
+            'incident_title' => 'required|string|max:100',
+            'severity_level' => 'required|in:low,medium,critical',
+            'description'    => 'required|string|max:500',
         ]);
+
+        // 2. SANITASI XSS (Mencegah tag HTML/Script jahat masuk ke Database)
+        $cleanTitle = strip_tags($request->incident_title);
+        $cleanDescription = strip_tags($request->description);
 
         $now = Carbon::now();
 
-        // 1. Insert ke tabel incident_logs dan ambil ID barunya
+        // 3. Insert ke tabel incident_logs pakai data yang sudah BERSIH
         $incidentId = DB::table('incident_logs')->insertGetId([
             'reported_by' => session('user_id'),
-            'incident_title' => $request->incident_title,
-            'description' => $request->description,
+            'incident_title' => $cleanTitle,       // <-- Pakai variabel yang sudah dibersihkan
+            'description' => $cleanDescription,    // <-- Pakai variabel yang sudah dibersihkan
             'severity_level' => $request->severity_level,
             'status' => 'open',
             'is_deleted' => false,
@@ -74,7 +78,7 @@ class IncidentController extends Controller
             'updated_at' => $now,
         ]);
 
-        // 2. Insert OTOMATIS ke tabel audit_trails (Ini requirement krusial!)
+        // 4. Insert OTOMATIS ke tabel audit_trails 
         DB::table('audit_trails')->insert([
             'incident_id' => $incidentId,
             'user_id' => session('user_id'),
@@ -88,6 +92,9 @@ class IncidentController extends Controller
     }
     public function updateStatus(Request $request, $id)
     {
+        if (session('role') !== 'supervisor') {
+            return back()->with('error', 'Akses ditolak! Hanya Supervisor yang memiliki wewenang untuk mengubah status.');
+        }
         // 1. Validasi input status
         $request->validate(['status' => 'required|in:open,investigating,resolved']);
         $now = Carbon::now();
@@ -123,6 +130,10 @@ class IncidentController extends Controller
 
     public function destroy($id)
     {
+        if (session('role') !== 'supervisor') {
+            return back()->with('error', 'Akses ditolak! Hanya Supervisor yang memiliki wewenang untuk menghapus data.');
+        }
+
         $now = Carbon::now();
         $incident = DB::table('incident_logs')->where('id', $id)->first();
         if (!$incident) return back()->with('error', 'Data tidak ditemukan.');

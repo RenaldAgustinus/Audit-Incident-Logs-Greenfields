@@ -3,6 +3,7 @@
 @section('page_title', 'Incident Logs')
 
 @section('content')
+
 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-8">
     <h2 class="text-lg font-bold text-gf-green mb-4">+ Lapor Insiden Baru</h2>
     
@@ -15,7 +16,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Judul Insiden</label>
-                <input type="text" name="incident_title" required class="w-full border border-gray-300 rounded p-2 focus:border-[#1B4D3E] focus:ring-1 focus:ring-[#1B4D3E]">
+                <textarea name="description" rows="3" required maxlength="500" class="w-full border border-gray-300 rounded p-2 focus:border-[#1B4D3E]" placeholder="Jelaskan detail insiden (Maks. 500 karakter)"></textarea>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Tingkat Keparahan (Severity)</label>
@@ -114,23 +115,34 @@
                 </td>
                 <td class="py-4 px-6">
                     <div class="flex items-center space-x-3">
-                        <form action="{{ route('incidents.update_status', $log->id) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <select name="status" class="bg-gray-50 border border-gray-300 text-gray-700 text-xs rounded-lg focus:ring-[#1B4D3E] focus:border-[#1B4D3E] block p-2 transition font-bold uppercase" onchange="this.form.submit()">
-                                <option value="open" {{ $log->status == 'open' ? 'selected' : '' }}>TERTUNDA</option>
-                                <option value="investigating" {{ $log->status == 'investigating' ? 'selected' : '' }}>DIPROSES</option>
-                                <option value="resolved" {{ $log->status == 'resolved' ? 'selected' : '' }}>SELESAI</option>
-                            </select>
-                        </form>
+                        @if(session('role') == 'supervisor')
+                            <form action="{{ route('incidents.update_status', $log->id) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <select name="status" class="bg-gray-50 border border-gray-300 text-gray-700 text-xs rounded-lg focus:ring-[#1B4D3E] focus:border-[#1B4D3E] block p-2 transition font-bold uppercase" onchange="this.form.submit()">
+                                    <option value="open" {{ $log->status == 'open' ? 'selected' : '' }}>TERTUNDA</option>
+                                    <option value="investigating" {{ $log->status == 'investigating' ? 'selected' : '' }}>DIPROSES</option>
+                                    <option value="resolved" {{ $log->status == 'resolved' ? 'selected' : '' }}>SELESAI</option>
+                                </select>
+                            </form>
 
-                        <form action="{{ route('incidents.destroy', $log->id) }}" method="POST" onsubmit="return confirm('Tindakan ini akan menghapus log insiden dari layar utama. Lanjutkan?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-gray-400 hover:text-red-600 transition bg-white hover:bg-red-50 p-1.5 rounded-md border border-transparent hover:border-red-200" title="Hapus Data">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
-                        </form>
+                            <form action="{{ route('incidents.destroy', $log->id) }}" method="POST" onsubmit="return confirm('Tindakan ini akan menghapus log insiden dari layar utama. Lanjutkan?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-gray-400 hover:text-red-600 transition bg-white hover:bg-red-50 p-1.5 rounded-md border border-transparent hover:border-red-200" title="Hapus Data">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </form>
+                        
+                        @else
+                            @if($log->status == 'open')
+                                <span class="text-red-600 font-bold text-xs uppercase">TERTUNDA</span>
+                            @elseif($log->status == 'investigating')
+                                <span class="text-blue-600 font-bold text-xs uppercase">DIPROSES</span>
+                            @else
+                                <span class="text-green-600 font-bold text-xs uppercase">SELESAI</span>
+                            @endif
+                        @endif
                     </div>
                 </td>
             </tr>

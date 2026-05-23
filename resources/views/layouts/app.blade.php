@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PT Greenfields - Operational Portal</title>
+    
+
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
         /* Warna Corporate Greenfields */
         .bg-gf-green { background-color: #1B4D3E; }

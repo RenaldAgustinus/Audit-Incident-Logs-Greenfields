@@ -50,9 +50,15 @@
                     <p class="text-gray-600 text-sm mb-4">{{ Str::limit($incident->description, 90) }}</p>
                     <p class="text-xs text-gray-400 mb-4">Dilaporkan: {{ \Carbon\Carbon::parse($incident->created_at)->format('d M Y, H:i') }} WIB</p>
                     
-                   <a href="{{ route('incidents.index', ['id' => $incident->id]) }}" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition mt-2">
-                        Tindak Lanjuti &rarr;
-                    </a>
+                   @if(session('role') == 'supervisor')
+                       <a href="{{ route('incidents.index', ['id' => $incident->id]) }}" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition mt-2">
+                            Tindak Lanjuti &rarr;
+                        </a>
+                   @else
+                       <a href="{{ route('incidents.index', ['id' => $incident->id]) }}" class="inline-block bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded text-sm transition mt-2">
+                            Lihat Detail &rarr;
+                        </a>
+                   @endif
                 </div>
             </div>
         </div>
@@ -83,7 +89,10 @@
                     <th class="py-3 px-6 border-b">Dilaporkan Oleh</th>
                     <th class="py-3 px-6 border-b">Tanggal</th>
                     <th class="py-3 px-6 border-b">Status</th>
-                    <th class="py-3 px-6 border-b text-center">Aksi</th>
+                    @if(session('role') == 'supervisor')
+                        <th class="py-3 px-6 border-b text-center">Aksi</th>
+                    @endif
+                </tr>
                 </tr>
             </thead>
             <tbody class="text-sm">
@@ -102,11 +111,13 @@
                             <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">SELESAI</span>
                         @endif
                     </td>
+                    @if(session('role') == 'supervisor')
                     <td class="py-4 px-6 text-center">
                         <a href="{{ route('incidents.index', ['id' => $log->id]) }}" title="Lihat Detail" class="inline-block text-gray-400 hover:text-gf-green transition">
                             <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
                         </a>
                     </td>
+                    @endif
                 </tr>
                 @endforeach
             </tbody>

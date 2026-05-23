@@ -3,6 +3,7 @@
 @section('page_title', 'System Audit Trails')
 
 @section('content')
+
 <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
     <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
         <h3 class="font-bold text-gray-700 flex items-center">
