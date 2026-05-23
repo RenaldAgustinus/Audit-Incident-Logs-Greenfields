@@ -153,22 +153,34 @@
                             
                             <!-- LOGIKA TOMBOL BERDASARKAN ROLE & STATUS -->
                             @if(session('role') == 'supervisor')
-                                @if($log->status == 'insiden_baru')
-                                    <button onclick="openSeverityModal({{ $log->id }})" 
-                                        title="Set Severity"
-                                        class="w-7 h-7 flex items-center justify-center rounded-full bg-amber-100 hover:bg-amber-200 text-amber-600 font-black text-sm transition border border-amber-300">
-                                        !
-                                    </button>
-                                @elseif($log->status == 'menunggu_verifikasi')
-                                    <button onclick="openVerifyModal({{ $log->id }}, '{{ asset('storage/' . $log->resolution_photo) }}', '{{ addslashes($log->resolution_notes) }}')" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded hover:bg-blue-700 transition font-bold">Verifikasi</button>
-                                @endif
-                                
-                                <!-- Tombol Delete Supervisor -->
-                                <form action="{{ route('incidents.destroy', $log->id) }}" method="POST" class="m-0" onsubmit="return confirm('Hapus data ini?');">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="text-gray-400 hover:text-red-600 p-1.5 rounded transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                                </form>
+                            <!-- Tombol Delete (paling kiri) -->
+                            <form action="{{ route('incidents.destroy', $log->id) }}" method="POST" class="m-0" onsubmit="return confirm('Hapus data ini?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="text-gray-400 hover:text-red-600 p-1.5 rounded transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </form>
+
+                            <!-- Tombol Set Severity: ikon tanda seru (kanan delete) -->
+                            @if($log->status == 'insiden_baru')
+                                <button onclick="openSeverityModal({{ $log->id }})" 
+                                    title="Set Severity"
+                                    class="w-7 h-7 flex items-center justify-center rounded-full bg-amber-100 hover:bg-amber-200 text-amber-600 font-black text-sm transition border border-amber-300">
+                                    !
+                                </button>
                             @endif
+
+                            <!-- Tombol Verifikasi: ikon dokumen (kanan delete) -->
+                            @if($log->status == 'menunggu_verifikasi')
+                                <button onclick="openVerifyModal({{ $log->id }}, '{{ asset('storage/' . $log->resolution_photo) }}', '{{ addslashes($log->resolution_notes) }}')"
+                                    title="Verifikasi Laporan"
+                                    class="w-7 h-7 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition border border-blue-300">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </button>
+                            @endif
+                        @endif
 
                             @if(session('role') == 'operator')
                                 @if($log->status == 'butuh_tindak_lanjut' || $log->status == 'ditolak')

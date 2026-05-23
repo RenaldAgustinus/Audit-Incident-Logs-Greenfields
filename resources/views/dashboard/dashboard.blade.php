@@ -60,7 +60,7 @@
     // Konfigurasi Chart Severity (Bar)
     const ctxSev = document.getElementById('severityChart').getContext('2d');
     new Chart(ctxSev, {
-        type: 'bar',
+        type: 'line',
         data: {
             labels: ['Critical', 'Medium', 'Low', 'Belum Diset'],
             datasets: [{
@@ -71,8 +71,15 @@
                     {{ $chartSeverity['Low'] }},
                     {{ $chartSeverity['Belum Diset'] }}
                 ],
-                backgroundColor: ['#DC2626', '#D97706', '#9CA3AF', '#E5E7EB'], // Merah, Kuning, Abu, Abu Terang
-                borderRadius: 4
+                borderColor: '#10B981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                pointBackgroundColor: ['#DC2626', '#3B82F6', '#10B981', '#9CA3AF'],
+                pointBorderColor: ['#DC2626', '#3B82F6', '#10B981', '#9CA3AF'],
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
             }]
         },
         options: {
