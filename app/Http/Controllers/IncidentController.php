@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Services\AuditLogger;
+use Illuminate\Support\Facades\Auth;
 
 class IncidentController extends Controller
 {
@@ -53,79 +55,58 @@ class IncidentController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validasi input (Max Length 100 dan 500 sudah aman di sini)
+        // 1. Validasi input (Sederhana langsung di controller untuk efisiensi)
         $request->validate([
-            'incident_title' => 'required|string|max:100',
-            'severity_level' => 'required|in:low,medium,critical',
-            'description'    => 'required|string|max:500',
+            'incident_title' => 'required|string|max:150',
+            'description'    => 'required|string',
         ]);
 
-        // 2. SANITASI XSS (Mencegah tag HTML/Script jahat masuk ke Database)
-        $cleanTitle = strip_tags($request->incident_title);
-        $cleanDescription = strip_tags($request->description);
-
-        $now = Carbon::now();
-
-        // 3. Insert ke tabel incident_logs pakai data yang sudah BERSIH
+        // 2. Simpan ke database (Tanpa Severity & Status default "insiden_baru")
         $incidentId = DB::table('incident_logs')->insertGetId([
-            'reported_by' => session('user_id'),
-            'incident_title' => $cleanTitle,       // <-- Pakai variabel yang sudah dibersihkan
-            'description' => $cleanDescription,    // <-- Pakai variabel yang sudah dibersihkan
-            'severity_level' => $request->severity_level,
-            'status' => 'open',
-            'is_deleted' => false,
-            'created_at' => $now,
-            'updated_at' => $now,
+            'reported_by'    => Auth::id(),
+            'incident_title' => $request->incident_title,
+            'description'    => $request->description,
+            'status'         => 'insiden_baru', // Sesuai revisi
+            'created_at'     => now(),
         ]);
 
-        // 4. Insert OTOMATIS ke tabel audit_trails 
-        DB::table('audit_trails')->insert([
-            'incident_id' => $incidentId,
-            'user_id' => session('user_id'),
-            'action' => 'CREATED',
-            'old_value' => null,
-            'new_value' => 'Insiden baru dilaporkan: ' . $request->severity_level,
-            'created_at' => $now,
-        ]);
+        // 3. Catat ke Audit Trail (Pakai fungsi bersih kita)
+        AuditLogger::log(
+            $incidentId, 
+            'CREATE', 
+            'Operator menambah insiden baru'
+        );
 
-        return back()->with('success', 'Insiden berhasil dilaporkan!');
+        return redirect()->back()->with('success', 'Insiden berhasil dilaporkan dan menunggu evaluasi Supervisor.');
     }
-    public function updateStatus(Request $request, $id)
+
+    /**
+     * FLOW 2: SUPERVISOR MENENTUKAN SEVERITY
+     */
+    public function setSeverity(Request $request, $id)
     {
-        if (session('role') !== 'supervisor') {
-            return back()->with('error', 'Akses ditolak! Hanya Supervisor yang memiliki wewenang untuk mengubah status.');
-        }
-        // 1. Validasi input status
-        $request->validate(['status' => 'required|in:open,investigating,resolved']);
-        $now = Carbon::now();
+        // 1. Validasi pilihan severity
+        $request->validate([
+            'severity_level' => 'required|in:low,medium,critical'
+        ]);
 
-        // 2. Ambil data insiden yang lama
-        $incident = DB::table('incident_logs')->where('id', $id)->first();
-        if (!$incident) return back()->with('error', 'Data tidak ditemukan.');
-
-        $oldStatus = $incident->status;
-        $newStatus = $request->status;
-
-        // 3. Jika statusnya memang berubah, lakukan Update & catat ke Audit
-        if ($oldStatus != $newStatus) {
-            // Update tabel insiden
-            DB::table('incident_logs')->where('id', $id)->update([
-                'status' => $newStatus,
-                'updated_at' => $now,
+        // 2. Update status & severity di database
+        DB::table('incident_logs')
+            ->where('id', $id)
+            ->update([
+                'severity_level' => $request->severity_level,
+                'status'         => 'butuh_tindak_lanjut', // Berubah status
+                'updated_at'     => now(),
             ]);
 
-            // Catat otomatis ke Audit Trails
-            DB::table('audit_trails')->insert([
-                'incident_id' => $id,
-                'user_id' => session('user_id'),
-                'action' => 'UPDATED',
-                'old_value' => 'Status awal: ' . strtoupper($oldStatus),
-                'new_value' => 'Status diubah ke: ' . strtoupper($newStatus),
-                'created_at' => $now,
-            ]);
-        }
+        // 3. Catat ke Audit Trail
+        AuditLogger::log(
+            $id, 
+            'UPDATE_SEVERITY', 
+            'Supervisor menetapkan tingkat severity menjadi ' . strtoupper($request->severity_level)
+        );
 
-        return back()->with('success', 'Status insiden berhasil diperbarui!');
+        return redirect()->back()->with('success', 'Severity ditetapkan. Insiden dikembalikan ke Operator untuk ditindaklanjuti.');
     }
 
     public function destroy($id)
@@ -195,5 +176,72 @@ class IncidentController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+    public function resolveIncident(Request $request, $id)
+    {
+        // 1. Validasi input form (Wajib isi catatan, foto opsional/wajib tergantung kebutuhan, di sini kita set wajib)
+        $request->validate([
+            'resolution_notes' => 'required|string',
+            'resolution_photo' => 'required|image|mimes:jpeg,png,jpg|max:2048', // Maksimal 2MB
+        ]);
+
+        // 2. Proses Upload Foto (kalau ada)
+        $photoPath = null;
+        if ($request->hasFile('resolution_photo')) {
+            // Simpan ke folder storage/app/public/resolutions
+            $photoPath = $request->file('resolution_photo')->store('resolutions', 'public');
+        }
+
+        // 3. Update database
+        DB::table('incident_logs')
+            ->where('id', $id)
+            ->update([
+                'resolution_notes' => $request->resolution_notes,
+                'resolution_photo' => $photoPath,
+                'status'           => 'menunggu_verifikasi', // Status maju ke Supervisor
+                'updated_at'       => now(),
+            ]);
+
+        // 4. Catat di Audit Trail
+        AuditLogger::log(
+            $id,
+            'RESOLVE',
+            'Operator mengirim laporan tindak lanjut dan foto bukti'
+        );
+
+        return redirect()->back()->with('success', 'Tindak lanjut berhasil dikirim. Menunggu verifikasi Supervisor.');
+    }
+
+    /**
+     * FLOW 5: SUPERVISOR VERIFIKASI (APPROVE / REJECT)
+     */
+    public function verifyIncident(Request $request, $id)
+    {
+        // 1. Validasi pilihan aksi
+        $request->validate([
+            'verification_action' => 'required|in:approve,reject'
+        ]);
+
+        $statusBaru = $request->verification_action === 'approve' ? 'selesai' : 'butuh_tindak_lanjut';
+        $keteranganLog = $request->verification_action === 'approve' 
+            ? 'Supervisor menyetujui tindak lanjut (Status: Selesai)' 
+            : 'Supervisor menolak tindak lanjut. Dikembalikan ke Operator';
+
+        // 2. Update status
+        DB::table('incident_logs')
+            ->where('id', $id)
+            ->update([
+                'status'     => $statusBaru,
+                'updated_at' => now(),
+            ]);
+
+        // 3. Catat di Audit Trail
+        AuditLogger::log(
+            $id,
+            'VERIFY',
+            $keteranganLog
+        );
+
+        return redirect()->back()->with('success', 'Verifikasi berhasil disimpan.');
     }
 }

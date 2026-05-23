@@ -16,7 +16,11 @@ Route::middleware(['user.session'])->group(function () {
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 // Route untuk Incident Logs
 Route::get('/incidents', [IncidentController::class, 'index'])->name('incidents.index');
+// Route untuk Flow 1 (Operator submit form)
 Route::post('/incidents', [IncidentController::class, 'store'])->name('incidents.store');
+
+// Route untuk Flow 2 (Supervisor atur severity)
+Route::put('/incidents/{id}/severity', [IncidentController::class, 'setSeverity'])->name('incidents.set_severity');
     
 // Route untuk Audit Trails
 Route::get('/audits', [AuditController::class, 'index'])->name('audits.index');
@@ -34,4 +38,9 @@ Route::get('/incidents/export', [IncidentController::class, 'exportCsv'])->name(
         return view('profile.profile'); 
     })->name('profile');
     
+// Route untuk Flow 4 (Operator Upload Tindak Lanjut)
+Route::post('/incidents/{id}/resolve', [IncidentController::class, 'resolveIncident'])->name('incidents.resolve');
+
+// Route untuk Flow 5 (Supervisor Approve/Reject)
+Route::put('/incidents/{id}/verify', [IncidentController::class, 'verifyIncident'])->name('incidents.verify');
 });
