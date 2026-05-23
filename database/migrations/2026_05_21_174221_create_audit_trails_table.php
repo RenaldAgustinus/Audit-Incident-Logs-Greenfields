@@ -14,10 +14,17 @@ return new class extends Migration
             $table->id();
             $table->foreignId('incident_id')->constrained('incident_logs')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            
             $table->string('action', 50);
+            
+            // TAMBAHAN WAJIB: Kolom description untuk menyimpan keterangan log
+            $table->string('description'); 
+            
             $table->text('old_value')->nullable();
             $table->text('new_value')->nullable();
-            $table->timestamp('created_at')->useCurrent();
+            
+            // Ganti jadi timestamps() biar otomatis bikin created_at dan updated_at
+            $table->timestamps(); 
         });
     }
 

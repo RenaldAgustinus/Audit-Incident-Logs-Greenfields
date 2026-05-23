@@ -55,22 +55,22 @@ class IncidentController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validasi input (Sederhana langsung di controller untuk efisiensi)
+        // 1. Validasi input
         $request->validate([
             'incident_title' => 'required|string|max:150',
             'description'    => 'required|string',
         ]);
 
-        // 2. Simpan ke database (Tanpa Severity & Status default "insiden_baru")
+        // 2. Simpan ke database
         $incidentId = DB::table('incident_logs')->insertGetId([
-            'reported_by'    => Auth::id(),
+            'reported_by'    => session('user_id'), // <--- UBAH BAGIAN INI
             'incident_title' => $request->incident_title,
             'description'    => $request->description,
-            'status'         => 'insiden_baru', // Sesuai revisi
+            'status'         => 'insiden_baru', 
             'created_at'     => now(),
         ]);
 
-        // 3. Catat ke Audit Trail (Pakai fungsi bersih kita)
+        // 3. Catat ke Audit Trail
         AuditLogger::log(
             $incidentId, 
             'CREATE', 

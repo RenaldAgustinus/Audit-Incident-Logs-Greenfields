@@ -1,131 +1,108 @@
 @extends('layouts.app')
 
-@section('page_title', 'Attention Logic Dashboard')
+@section('page_title', 'Analytics Dashboard')
 
 @section('content')
+<!-- Filter Rentang Bulan -->
+<div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-lg font-bold text-gray-800">Ringkasan Operasional</h2>
+        <p class="text-sm text-gray-500">Statistik insiden berdasarkan periode bulan.</p>
+    </div>
+    <form action="{{ route('dashboard') }}" method="GET" class="flex items-center gap-2">
+        <label class="text-sm font-bold text-gray-600">Pilih Bulan:</label>
+        <input type="month" name="month" value="{{ $filterDate }}" onchange="this.form.submit()" class="border border-gray-300 rounded-lg text-sm py-2 px-3 focus:ring-[#1B4D3E] focus:border-[#1B4D3E]">
+    </form>
+</div>
 
+<!-- Grid Cards (Metrik Cepat) -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Total Insiden</h3>
-        <p class="text-3xl font-bold text-gf-green">{{ $totalIncidents }}</p>
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-l-4 border-l-gray-800">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Total Insiden Bulan Ini</h3>
+        <p class="text-3xl font-bold text-gray-800">{{ $totalInsiden }}</p>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Critical Open</h3>
-        <p class="text-3xl font-bold text-red-600">{{ $criticalOpenCount }}</p>
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-l-4 border-l-red-600">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Butuh Penanganan</h3>
+        <p class="text-3xl font-bold text-red-600">{{ $sedangDiproses }}</p>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Pending Audit</h3>
-        <p class="text-3xl font-bold text-blue-600">{{ $pendingAuditCount }}</p> 
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-l-4 border-l-blue-500">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Menunggu Verifikasi</h3>
+        <p class="text-3xl font-bold text-blue-600">{{ $menungguVerifikasi }}</p>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">System Status</h3>
-        
-        @if($criticalOpenCount > 0)
-            <p class="text-3xl font-bold text-red-600 animate-pulse">Critical</p>
-        @else
-            <p class="text-3xl font-bold text-green-600">Normal</p>
-        @endif
-    </div>
-</div> 
-
-@if($criticalIncidents->count() > 0)
-<div class="mb-8">
-    <h2 class="text-lg font-bold text-red-700 flex items-center mb-4">
-        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-        URGENT ACTION REQUIRED
-    </h2>
-    
-    <div class="flex overflow-x-auto space-x-6 pb-4 snap-x">
-        @foreach($criticalIncidents as $incident)
-        <div class="bg-white border-l-4 border-red-600 rounded-lg shadow-sm p-6 relative min-w-[320px] md:min-w-[450px] shrink-0 snap-start">
-            <div class="absolute top-6 right-6">
-                <span class="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded">CRITICAL</span>
-            </div>
-            <div class="flex items-start">
-                <div class="bg-red-50 p-3 rounded mr-4">
-                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2 pr-20">{{ $incident->incident_title }}</h3>
-                    <p class="text-gray-600 text-sm mb-4">{{ Str::limit($incident->description, 90) }}</p>
-                    <p class="text-xs text-gray-400 mb-4">Dilaporkan: {{ \Carbon\Carbon::parse($incident->created_at)->format('d M Y, H:i') }} WIB</p>
-                    
-                   @if(session('role') == 'supervisor')
-                       <a href="{{ route('incidents.index', ['id' => $incident->id]) }}" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition mt-2">
-                            Tindak Lanjuti &rarr;
-                        </a>
-                   @else
-                       <a href="{{ route('incidents.index', ['id' => $incident->id]) }}" class="inline-block bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded text-sm transition mt-2">
-                            Lihat Detail &rarr;
-                        </a>
-                   @endif
-                </div>
-            </div>
-        </div>
-        @endforeach
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-l-4 border-l-green-500">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Insiden Selesai</h3>
+        <p class="text-3xl font-bold text-green-600">{{ $selesai }}</p>
     </div>
 </div>
-@endif
 
-<div id="recent-logs" class="scroll-mt-6">
-    <div class="flex justify-between items-center mb-4">
-        <h2 class="text-lg font-bold text-gf-green flex items-center">
-            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
-            RECENT LOGS
-        </h2>
-        
-        <form action="{{ route('dashboard') }}" method="GET" class="relative">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari judul insiden..." class="pl-8 pr-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-[#1B4D3E] focus:border-[#1B4D3E] w-48 md:w-64" onchange="this.form.submit()">
-            <svg class="w-4 h-4 absolute left-2.5 top-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-        </form>
+<!-- Area Diagram / Chart -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Chart 1: Bar Chart Severity -->
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+        <h3 class="font-bold text-gray-700 mb-4">Distribusi Tingkat Keparahan (Severity)</h3>
+        <div class="relative h-64 w-full">
+            <canvas id="severityChart"></canvas>
+        </div>
     </div>
-    
-    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                    <th class="py-3 px-6 border-b">ID</th>
-                    <th class="py-3 px-6 border-b">Judul Insiden</th>
-                    <th class="py-3 px-6 border-b">Dilaporkan Oleh</th>
-                    <th class="py-3 px-6 border-b">Tanggal</th>
-                    <th class="py-3 px-6 border-b">Status</th>
-                    @if(session('role') == 'supervisor')
-                        <th class="py-3 px-6 border-b text-center">Aksi</th>
-                    @endif
-                </tr>
-                </tr>
-            </thead>
-            <tbody class="text-sm">
-                @foreach($recentLogs as $log)
-                <tr class="hover:bg-gray-50 border-b border-gray-50 last:border-0 transition">
-                    <td class="py-4 px-6 font-medium text-gray-700">#GF-{{ date('Y') }}-{{ str_pad($log->id, 3, '0', STR_PAD_LEFT) }}</td>
-                    <td class="py-4 px-6 text-gray-800">{{ $log->incident_title }}</td>
-                    <td class="py-4 px-6 text-gray-600">{{ $log->reporter_name }}</td>
-                    <td class="py-4 px-6 text-gray-500">{{ \Carbon\Carbon::parse($log->created_at)->format('d M Y, H:i') }}</td>
-                    <td class="py-4 px-6">
-                        @if($log->status == 'open')
-                            <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">TERTUNDA</span>
-                        @elseif($log->status == 'investigating')
-                            <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">DIPROSES</span>
-                        @else
-                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">SELESAI</span>
-                        @endif
-                    </td>
-                    @if(session('role') == 'supervisor')
-                    <td class="py-4 px-6 text-center">
-                        <a href="{{ route('incidents.index', ['id' => $log->id]) }}" title="Lihat Detail" class="inline-block text-gray-400 hover:text-gf-green transition">
-                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
-                        </a>
-                    </td>
-                    @endif
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-        
-       <div class="p-4 bg-gray-50 border-t border-gray-100">
-            {{ $recentLogs->fragment('recent-logs')->links('pagination::tailwind') }}
+
+    <!-- Chart 2: Doughnut Chart Status -->
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col items-center">
+        <h3 class="font-bold text-gray-700 mb-4 w-full text-left">Rasio Status Penyelesaian</h3>
+        <div class="relative h-64 w-64">
+            <canvas id="statusChart"></canvas>
         </div>
     </div>
 </div>
+
+<!-- Load Chart.js via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Konfigurasi Chart Severity (Bar)
+    const ctxSev = document.getElementById('severityChart').getContext('2d');
+    new Chart(ctxSev, {
+        type: 'bar',
+        data: {
+            labels: ['Critical', 'Medium', 'Low', 'Belum Diset'],
+            datasets: [{
+                label: 'Jumlah Insiden',
+                data: [
+                    {{ $chartSeverity['Critical'] }},
+                    {{ $chartSeverity['Medium'] }},
+                    {{ $chartSeverity['Low'] }},
+                    {{ $chartSeverity['Belum Diset'] }}
+                ],
+                backgroundColor: ['#DC2626', '#D97706', '#9CA3AF', '#E5E7EB'], // Merah, Kuning, Abu, Abu Terang
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+
+    // Konfigurasi Chart Status (Doughnut)
+    const ctxStat = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctxStat, {
+        type: 'doughnut',
+        data: {
+            labels: ['Diproses', 'Verifikasi', 'Selesai'],
+            datasets: [{
+                data: [{{ $sedangDiproses }}, {{ $menungguVerifikasi }}, {{ $selesai }}],
+                backgroundColor: ['#DC2626', '#3B82F6', '#10B981'], // Merah, Biru, Hijau
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+</script>
 @endsection

@@ -14,7 +14,8 @@ class DatabaseSeeder extends Seeder
         $faker = Faker::create('id_ID');
         $now = Carbon::now();
 
-       DB::table('users')->insert([
+        // 1. Insert Master Users
+        DB::table('users')->insert([
             [
                 'username' => 'supervisor_admin',
                 'password' => Hash::make('greenfields123'),
@@ -45,10 +46,20 @@ class DatabaseSeeder extends Seeder
                 'reported_by' => $faker->randomElement([2, 3]), // Operator 1 atau 2
                 'incident_title' => $faker->sentence(4),
                 'description' => $faker->paragraph(),
-                'severity_level' => $faker->randomElement(['low', 'medium']),
-                'status' => $faker->randomElement(['open', 'investigating', 'resolved']),
+                // Sesuai revisi, ada kemungkinan severity belum diset
+                'severity_level' => $faker->randomElement(['low', 'medium', null]), 
+                
+                // PERBAIKAN 1: Gunakan status versi baru!
+                'status' => $faker->randomElement([
+                    'insiden_baru', 
+                    'butuh_tindak_lanjut', 
+                    'menunggu_verifikasi', 
+                    'selesai', 
+                    'ditolak'
+                ]),
+                
                 'is_deleted' => false,
-                'created_at' => $now->subHours(rand(1, 100)),
+                'created_at' => $now->copy()->subHours(rand(1, 100)),
                 'updated_at' => $now,
             ];
         }
@@ -59,7 +70,7 @@ class DatabaseSeeder extends Seeder
             'incident_title' => 'Kebocoran Pipa Utama Tangki A',
             'description' => 'Terjadi penurunan tekanan drastis pada pipa distribusi susu di Sektor A.',
             'severity_level' => 'critical',
-            'status' => 'open',
+            'status' => 'insiden_baru', // Diubah ke status baru
             'is_deleted' => false,
             'created_at' => Carbon::now()->subMinutes(15),
             'updated_at' => Carbon::now(),
@@ -69,7 +80,7 @@ class DatabaseSeeder extends Seeder
             'incident_title' => 'Sistem Pendingin Chiller 04 Mati',
             'description' => 'Suhu pada chiller penyimpanan naik melebihi batas standar operasional.',
             'severity_level' => 'critical',
-            'status' => 'open',
+            'status' => 'insiden_baru', // Diubah ke status baru
             'is_deleted' => false,
             'created_at' => Carbon::now()->subMinutes(45),
             'updated_at' => Carbon::now(),
@@ -79,7 +90,7 @@ class DatabaseSeeder extends Seeder
             'incident_title' => 'Panel Listrik Sektor C Terbakar',
             'description' => 'Korsleting pada panel utama menyebabkan *shutdown* sebagian lini produksi.',
             'severity_level' => 'critical',
-            'status' => 'investigating',
+            'status' => 'butuh_tindak_lanjut', // Diubah ke status baru
             'is_deleted' => false,
             'created_at' => Carbon::now()->subHours(2),
             'updated_at' => Carbon::now(),
@@ -90,20 +101,30 @@ class DatabaseSeeder extends Seeder
         // 4. Insert Audit Trails Dummy
         DB::table('audit_trails')->insert([
             [
-                'incident_id' => 52, // Asumsi ID Critical ke-2
+                'incident_id' => 53, // Asumsi ID Critical
                 'user_id' => 1, // Diubah oleh Supervisor
-                'action' => 'STATUS_UPDATED',
-                'old_value' => 'open',
-                'new_value' => 'investigating',
+                'action' => 'UPDATE_SEVERITY',
+                
+                // PERBAIKAN 2: Tambahkan kolom description yang wajib ada!
+                'description' => 'Supervisor menetapkan tingkat severity menjadi CRITICAL',
+                
+                'old_value' => 'insiden_baru',
+                'new_value' => 'butuh_tindak_lanjut',
                 'created_at' => Carbon::now()->subMinutes(10),
+                'updated_at' => Carbon::now(),
             ],
             [
                 'incident_id' => 1,
                 'user_id' => 2,
-                'action' => 'CREATED',
+                'action' => 'CREATE',
+                
+                // PERBAIKAN 2: Tambahkan kolom description
+                'description' => 'Operator menambah insiden baru',
+                
                 'old_value' => null,
-                'new_value' => 'Log insiden baru dibuat',
+                'new_value' => 'Data insiden dibuat',
                 'created_at' => Carbon::now()->subHours(90),
+                'updated_at' => Carbon::now(),
             ]
         ]);
     }
