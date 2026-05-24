@@ -1,9 +1,9 @@
 <?php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Faker\Factory as Faker;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 
@@ -11,12 +11,17 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $faker = Faker::create('id_ID');
         $now = Carbon::now();
 
-        // 1. Insert Master Users
+        // 0. BERSIHKAN DATA LAMA (Mencegah duplikasi)
+        DB::table('audit_trails')->delete();
+        DB::table('incident_logs')->delete();
+        DB::table('users')->delete();
+
+        // 1. INSERT MASTER USERS
         DB::table('users')->insert([
             [
+                'id' => 1,
                 'username' => 'supervisor_admin',
                 'password' => Hash::make('greenfields123'),
                 'full_name' => 'Renald Agustinus', 
@@ -24,6 +29,7 @@ class DatabaseSeeder extends Seeder
                 'created_at' => $now,
             ],
             [
+                'id' => 2,
                 'username' => 'operator_satu',
                 'password' => Hash::make('greenfields123'),
                 'full_name' => 'Lia Kusuma',
@@ -31,6 +37,7 @@ class DatabaseSeeder extends Seeder
                 'created_at' => $now,
             ],
             [
+                'id' => 3,
                 'username' => 'operator_dua',
                 'password' => Hash::make('greenfields123'),
                 'full_name' => 'Bagas Prasetyo',
@@ -39,93 +46,82 @@ class DatabaseSeeder extends Seeder
             ]
         ]);
 
-        // 2. Insert 50 Normal/Medium Logs via Faker
-        $incidents = [];
-        for ($i = 0; $i < 50; $i++) {
-            $incidents[] = [
-                'reported_by' => $faker->randomElement([2, 3]), // Operator 1 atau 2
-                'incident_title' => $faker->sentence(4),
-                'description' => $faker->paragraph(),
-                // Sesuai revisi, ada kemungkinan severity belum diset
-                'severity_level' => $faker->randomElement(['low', 'medium', null]), 
-                
-                // PERBAIKAN 1: Gunakan status versi baru!
-                'status' => $faker->randomElement([
-                    'insiden_baru', 
-                    'butuh_tindak_lanjut', 
-                    'menunggu_verifikasi', 
-                    'selesai', 
-                    'ditolak'
-                ]),
-                
+        // 2. DATA DUMMY REALISTIS (Tanpa Faker)
+        $incidents = [
+            [
+                'reported_by' => 2, // Lia
+                'incident_title' => 'Mesin Pasteurisasi Unit 2 Overheat',
+                'description' => 'Suhu mesin tiba-tiba naik melebihi ambang batas normal (mencapai 90°C). Indikator alarm merah menyala, produksi dihentikan sementara.',
+                'severity_level' => 'critical',
+                'status' => 'insiden_baru',
+                'resolution_notes' => null,
+                'resolution_photo' => null,
                 'is_deleted' => false,
-                'created_at' => $now->copy()->subHours(rand(1, 100)),
-                'updated_at' => $now,
-            ];
-        }
-        
-        // 3. Insert 3 CRITICAL Logs (Bintang Utamanya untuk Dashboard)
-        $incidents[] = [
-            'reported_by' => 2,
-            'incident_title' => 'Kebocoran Pipa Utama Tangki A',
-            'description' => 'Terjadi penurunan tekanan drastis pada pipa distribusi susu di Sektor A.',
-            'severity_level' => 'critical',
-            'status' => 'insiden_baru', // Diubah ke status baru
-            'is_deleted' => false,
-            'created_at' => Carbon::now()->subMinutes(15),
-            'updated_at' => Carbon::now(),
-        ];
-        $incidents[] = [
-            'reported_by' => 3,
-            'incident_title' => 'Sistem Pendingin Chiller 04 Mati',
-            'description' => 'Suhu pada chiller penyimpanan naik melebihi batas standar operasional.',
-            'severity_level' => 'critical',
-            'status' => 'insiden_baru', // Diubah ke status baru
-            'is_deleted' => false,
-            'created_at' => Carbon::now()->subMinutes(45),
-            'updated_at' => Carbon::now(),
-        ];
-        $incidents[] = [
-            'reported_by' => 2,
-            'incident_title' => 'Panel Listrik Sektor C Terbakar',
-            'description' => 'Korsleting pada panel utama menyebabkan *shutdown* sebagian lini produksi.',
-            'severity_level' => 'critical',
-            'status' => 'butuh_tindak_lanjut', // Diubah ke status baru
-            'is_deleted' => false,
-            'created_at' => Carbon::now()->subHours(2),
-            'updated_at' => Carbon::now(),
+                'created_at' => Carbon::now()->subHours(2),
+                'updated_at' => Carbon::now()->subHours(2),
+            ],
+            [
+                'reported_by' => 3, // Bagas
+                'incident_title' => 'Kebocoran Pipa Susu Tangki B',
+                'description' => 'Terdapat tetesan susu cair pada sambungan pipa valve bawah dekat area filter. Area lantai menjadi licin.',
+                'severity_level' => 'critical',
+                'status' => 'butuh_tindak_lanjut',
+                'resolution_notes' => null,
+                'resolution_photo' => null,
+                'is_deleted' => false,
+                'created_at' => Carbon::now()->subDays(1)->setTime(10, 15),
+                'updated_at' => Carbon::now()->subDays(1)->setTime(11, 00),
+            ],
+            [
+                'reported_by' => 2, // Lia
+                'incident_title' => 'Sensor Suhu Chiller 04 Error',
+                'description' => 'Pembacaan suhu di layar monitor LCD tidak akurat, angka melompat-lompat.',
+                'severity_level' => 'medium',
+                'status' => 'menunggu_verifikasi',
+                'resolution_notes' => 'Kabel sensor kendor akibat getaran kompresor, sudah di-solder ulang dan dibungkus isolator.',
+                'resolution_photo' => null,
+                'is_deleted' => false,
+                'created_at' => Carbon::now()->subDays(2)->setTime(14, 20),
+                'updated_at' => Carbon::now()->subDays(2)->setTime(16, 00),
+            ],
+            [
+                'reported_by' => 3, // Bagas
+                'incident_title' => 'Lampu Penerangan Sektor Produksi Mati',
+                'description' => 'Bohlam putus di area packing line 1. Mengganggu visibilitas pekerja saat pengecekan kualitas (QC).',
+                'severity_level' => 'low',
+                'status' => 'selesai',
+                'resolution_notes' => 'Lampu TL 40 watt sudah diganti dengan unit LED baru yang lebih terang.',
+                'resolution_photo' => null,
+                'is_deleted' => false,
+                'created_at' => Carbon::now()->subDays(3)->setTime(8, 45),
+                'updated_at' => Carbon::now()->subDays(3)->setTime(9, 30),
+            ],
+            [
+                'reported_by' => 2, // Lia
+                'incident_title' => 'Conveyor Belt Sektor C Tersendat',
+                'description' => 'Motor penggerak berbunyi kasar dan putaran belt tidak stabil.',
+                'severity_level' => 'medium',
+                'status' => 'ditolak',
+                'resolution_notes' => 'Telah diberi pelumas pada gear utama.',
+                'resolution_photo' => null,
+                'is_deleted' => false,
+                'created_at' => Carbon::now()->subDays(4),
+                'updated_at' => Carbon::now()->subDays(3),
+            ],
+            [
+                'reported_by' => 3, // Bagas
+                'incident_title' => 'Stok Cairan Sanitasi Menipis',
+                'description' => 'Cairan pembersih untuk sterilisasi alat sebelum shift pagi sisa 1 jerigen. Perlu *restock* dari gudang pusat.',
+                'severity_level' => null, // Sengaja dikosongkan agar UI "Belum Ditentukan" muncul
+                'status' => 'insiden_baru',
+                'resolution_notes' => null,
+                'resolution_photo' => null,
+                'is_deleted' => false,
+                'created_at' => Carbon::now()->subMinutes(45),
+                'updated_at' => Carbon::now()->subMinutes(45),
+            ]
         ];
 
         DB::table('incident_logs')->insert($incidents);
-
-        // 4. Insert Audit Trails Dummy
-        DB::table('audit_trails')->insert([
-            [
-                'incident_id' => 53, // Asumsi ID Critical
-                'user_id' => 1, // Diubah oleh Supervisor
-                'action' => 'UPDATE_SEVERITY',
-                
-                // PERBAIKAN 2: Tambahkan kolom description yang wajib ada!
-                'description' => 'Supervisor menetapkan tingkat severity menjadi CRITICAL',
-                
-                'old_value' => 'insiden_baru',
-                'new_value' => 'butuh_tindak_lanjut',
-                'created_at' => Carbon::now()->subMinutes(10),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'incident_id' => 1,
-                'user_id' => 2,
-                'action' => 'CREATE',
-                
-                // PERBAIKAN 2: Tambahkan kolom description
-                'description' => 'Operator menambah insiden baru',
-                
-                'old_value' => null,
-                'new_value' => 'Data insiden dibuat',
-                'created_at' => Carbon::now()->subHours(90),
-                'updated_at' => Carbon::now(),
-            ]
-        ]);
     }
 }
