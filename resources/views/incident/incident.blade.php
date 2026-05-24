@@ -13,10 +13,18 @@
         </button>
     </div>
 @endif
-@if(session('error'))
-    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-sm mb-6 flex justify-between items-center">
-        <div><span class="font-bold">Gagal!</span> {{ session('error') }}</div>
-        <button onclick="this.parentElement.style.display='none'" class="text-red-700 hover:text-red-900">
+<!-- Notifikasi Error Validasi Form -->
+@if($errors->any())
+    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-sm mb-6 flex justify-between items-start">
+        <div>
+            <span class="font-bold">Gagal Memproses Data:</span>
+            <ul class="list-disc ml-5 mt-1 text-sm font-medium">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        <button onclick="this.parentElement.style.display='none'" class="text-red-700 hover:text-red-900 mt-0.5">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
     </div>
