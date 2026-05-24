@@ -6,41 +6,44 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\AuditController;
 
-// Rute Publik (Login)
-Route::get('/login', [AuthController::class, 'index'])->name('login');
-Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+// ==========================================
+// RUTE PUBLIK (Autentikasi)
+// ==========================================
+Route::controller(AuthController::class)->group(function () {
+    Route::get('/login', 'index')->name('login');
+    Route::post('/login', 'authenticate')->name('authenticate');
+});
 
-// Rute Terlindungi (Hanya yang sudah login)
+// ==========================================
+// RUTE TERLINDUNG (Wajib Login)
+// ==========================================
 Route::middleware(['user.session'])->group(function () {
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-// Route untuk Incident Logs
-Route::get('/incidents', [IncidentController::class, 'index'])->name('incidents.index');
-// Route untuk Flow 1 (Operator submit form)
-Route::post('/incidents', [IncidentController::class, 'store'])->name('incidents.store');
-
-// Route untuk Flow 2 (Supervisor atur severity)
-Route::put('/incidents/{id}/severity', [IncidentController::class, 'setSeverity'])->name('incidents.set_severity');
     
-// Route untuk Audit Trails
-Route::get('/audits', [AuditController::class, 'index'])->name('audits.index');
+    // Logout diletakkan di dalam middleware (hanya yang sudah login yang bisa logout)
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Route untuk Update Status
-    Route::put('/incidents/{id}/status', [IncidentController::class, 'updateStatus'])->name('incidents.update_status');
-    
-// Route untuk Soft Delete
-Route::delete('/incidents/{id}', [IncidentController::class, 'destroy'])->name('incidents.destroy');
+    // Dashboard & Profile
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', fn() => view('profile.profile'))->name('profile');
 
-// Route untuk Export CSV
-Route::get('/incidents/export', [IncidentController::class, 'exportCsv'])->name('incidents.export');
-    
-    Route::get('/profile', function () {
-        return view('profile.profile'); 
-    })->name('profile');
-    
-// Route untuk Flow 4 (Operator Upload Tindak Lanjut)
-Route::post('/incidents/{id}/resolve', [IncidentController::class, 'resolveIncident'])->name('incidents.resolve');
+    // Audit Trails
+    Route::get('/audits', [AuditController::class, 'index'])->name('audits.index');
 
-// Route untuk Flow 5 (Supervisor Approve/Reject)
-Route::put('/incidents/{id}/verify', [IncidentController::class, 'verifyIncident'])->name('incidents.verify');
+    // ------------------------------------------
+    // MODUL INCIDENT LOGS
+    // ------------------------------------------
+    Route::prefix('incidents')->name('incidents.')->controller(IncidentController::class)->group(function () {
+        // 1. Rute Statis (Harus di atas)
+        Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::get('/export', 'exportCsv')->name('export');
+
+        // 2. Rute Dinamis dengan parameter {id} (Harus di bawah)
+        Route::put('/{id}/severity', 'setSeverity')->name('set_severity');
+        Route::put('/{id}/status', 'updateStatus')->name('update_status');
+        Route::post('/{id}/resolve', 'resolveIncident')->name('resolve');
+        Route::put('/{id}/verify', 'verifyIncident')->name('verify');
+        Route::delete('/{id}', 'destroy')->name('destroy');
+    });
+
 });
